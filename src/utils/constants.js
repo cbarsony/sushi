@@ -1,1 +1,1 @@
-export const constants = {delay: 300}
+export const constants = {delay: 500}

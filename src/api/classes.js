@@ -26,12 +26,14 @@ export class Food {
   /**
    * @param id {number}
    * @param name {string}
+   * @param description {string}
    * @param macros {Macros}
    * @param units {Unit[]}
    */
-  constructor(id, name, macros, units) {
+  constructor(id, name, description, macros, units) {
     this.id = id
     this.name = name
+    this.description = description
     this.macros = macros
     this.units = units
   }

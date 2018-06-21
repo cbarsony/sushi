@@ -1,0 +1,25 @@
+@startuml
+
+[*] --> Blurred
+
+state Focused {
+    [*] --> Empty
+    state H
+
+    state Text {
+        [*] --> Waiting
+
+        state Searching
+
+        Waiting --> Searching : search
+        Searching --> Waiting : find
+    }
+
+    Empty --> Text : startTyping
+    Text --> Empty : clear
+}
+
+Blurred --> H : focus
+Focused --> Blurred : blur
+
+@enduml

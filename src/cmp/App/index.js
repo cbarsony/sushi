@@ -1,6 +1,7 @@
 import React, {Component} from 'react'
 
 import {api} from 'api'
+import {FoodSelect} from 'cmp/FoodSelect'
 
 export class App extends Component {
   state = {
@@ -9,16 +10,11 @@ export class App extends Component {
   }
 
   render() {
-    const state = this.state
+    // const state = this.state
 
     return (
       <div className="App">
-        <input
-          type="text"
-          value={state.searchText}
-          onChange={this.onSearchFoods}
-        />
-        {state.isSearching && <span>searching...</span>}
+        <FoodSelect/>
       </div>
     )
   }
