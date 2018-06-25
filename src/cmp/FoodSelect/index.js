@@ -11,7 +11,7 @@ const cn = makeBem('FoodSelect')
 const states = {
   BLURRED: 'BLURRED',
   FOCUSED: 'FOCUSED',
-  FOCUSED_HISTORY: 'FOCUSED_HISTORY',
+  WAITING_HISTORY: 'WAITING_HISTORY',
   EMPTY: 'EMPTY',
   TEXT: 'TEXT',
   WAITING: 'WAITING',
@@ -44,9 +44,10 @@ export class FoodSelect extends Component {
           transitions: [
             {
               event: events.FOCUS,
-              target: states.WAITING,
+              target: states.WAITING_HISTORY,
             },
           ],
+          onEntry: () => console.log('blurred entry'),
         },
         {
           id: states.FOCUSED,
@@ -66,7 +67,33 @@ export class FoodSelect extends Component {
                   target: states.SEARCHING,
                 },
               ],
-              onEntry: this.onWaitingEntry,
+              states: [
+                {
+                  id: states.WAITING_HISTORY,
+                  $type: 'history',
+                  transitions: [{target: states.EMPTY}],
+                  onEntry: () => console.log('history entry'),
+                },
+                {
+                  id: states.EMPTY,
+                  onEntry: this.onEmptyEntry,
+                },
+                {
+                  id: states.TEXT,
+                  transitions: [
+                    {
+                      event: events.CLEAR,
+                      target: states.EMPTY,
+                    },
+                    {
+                      event: events.FIND,
+                      target: states.TEXT,
+                    },
+                  ],
+                  onEntry: this.onTextEntry,
+                },
+              ],
+              onEntry: () => console.log('waiting entry'),
             },
             {
               id: states.SEARCHING,
@@ -77,7 +104,11 @@ export class FoodSelect extends Component {
                 },
                 {
                   event: events.FIND,
-                  target: states.WAITING,
+                  target: states.TEXT,
+                },
+                {
+                  event: events.CLEAR,
+                  target: states.EMPTY,
                 },
               ],
               onEntry: this.onSearchingEntry,
@@ -103,11 +134,20 @@ export class FoodSelect extends Component {
           type="text"
           placeholder="Start typing a food name..."
           ref={input => this.foodSelectInput = input}
-          onChange={e => this.sc.gen(events.TYPE, e.target.value)}
+          onChange={({target: {value}}) => value ? this.sc.gen(events.TYPE, {searchText: value}) : this.sc.gen(events.CLEAR)}
           onFocus={() => this.sc.gen(events.FOCUS)}
           onBlur={() => this.sc.gen(events.BLUR)}
           onKeyDown={this.onKeyDown}
         />
+        {/*<button
+          onClick={() => this.sc.gen('t1')}
+        >t1</button>
+        <button
+          onClick={() => this.sc.gen('t2')}
+        >t2</button>
+        <button
+          onClick={() => this.sc.gen('t3')}
+        >t3</button>*/}
         {state.isSearching && <span>searching...</span>}
         {state.isSuggestionContainerVisible && (
           state.foodList.length === 0 ? (
@@ -125,7 +165,18 @@ export class FoodSelect extends Component {
     )
   }
 
-  onFocusedExit = () => this.setState({isSuggestionContainerVisible: false})
+  onFocusedExit = () => {
+    console.log('focused exit')
+    this.setState({isSuggestionContainerVisible: false})
+  }
+
+  onEmptyEntry = () => {
+    console.log('empty entry')
+    this.setState({
+      searchText: '',
+      isSuggestionContainerVisible: false,
+    })
+  }
 
   onWaitingEntry = ({data}) => {
     const isSuggestionContainerVisible = this.state.searchText !== ''
@@ -141,14 +192,29 @@ export class FoodSelect extends Component {
     }
   }
 
-  onSearchingEntry = ({data}) => {
-    api.searchFoods(data).then(foodList => this.sc.gen(events.FIND, foodList))
+  onSearchingEntry = ({data: {searchText}}) => {
+    api.searchFoods(searchText).then(foodList => {
+      this.sc.gen(events.FIND, {foodList})
+    })
 
     this.setState({
-      searchText: data,
+      searchText,
       isSearching: true,
       selectedFoodIndex: -1,
     })
+  }
+
+  onTextEntry = ({data: {foodList}}) => {
+    console.log('text entry', foodList)
+    if(foodList){
+      this.setState({
+        foodList,
+        isSuggestionContainerVisible: true,
+      })
+    }
+    else {
+      this.setState({isSuggestionContainerVisible: true})
+    }
   }
 
   onSearchingExit = () => this.setState({isSearching: false})
