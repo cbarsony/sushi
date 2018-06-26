@@ -47,7 +47,6 @@ export class FoodSelect extends Component {
               target: states.WAITING_HISTORY,
             },
           ],
-          onEntry: () => console.log('blurred entry'),
         },
         {
           id: states.FOCUSED,
@@ -72,7 +71,6 @@ export class FoodSelect extends Component {
                   id: states.WAITING_HISTORY,
                   $type: 'history',
                   transitions: [{target: states.EMPTY}],
-                  onEntry: () => console.log('history entry'),
                 },
                 {
                   id: states.EMPTY,
@@ -93,7 +91,6 @@ export class FoodSelect extends Component {
                   onEntry: this.onTextEntry,
                 },
               ],
-              onEntry: () => console.log('waiting entry'),
             },
             {
               id: states.SEARCHING,
@@ -119,7 +116,7 @@ export class FoodSelect extends Component {
       ],
     }
 
-    this.sc = new Statechart(model)
+    this.sc = new Statechart(model, {}, true)
     this.sc.start()
 
     this.foodSelectInput.focus()
@@ -139,15 +136,6 @@ export class FoodSelect extends Component {
           onBlur={() => this.sc.gen(events.BLUR)}
           onKeyDown={this.onKeyDown}
         />
-        {/*<button
-          onClick={() => this.sc.gen('t1')}
-        >t1</button>
-        <button
-          onClick={() => this.sc.gen('t2')}
-        >t2</button>
-        <button
-          onClick={() => this.sc.gen('t3')}
-        >t3</button>*/}
         {state.isSearching && <span>searching...</span>}
         {state.isSuggestionContainerVisible && (
           state.foodList.length === 0 ? (
@@ -166,30 +154,14 @@ export class FoodSelect extends Component {
   }
 
   onFocusedExit = () => {
-    console.log('focused exit')
     this.setState({isSuggestionContainerVisible: false})
   }
 
   onEmptyEntry = () => {
-    console.log('empty entry')
     this.setState({
       searchText: '',
       isSuggestionContainerVisible: false,
     })
-  }
-
-  onWaitingEntry = ({data}) => {
-    const isSuggestionContainerVisible = this.state.searchText !== ''
-
-    if(data) {
-      this.setState({
-        foodList: data,
-        isSuggestionContainerVisible,
-      })
-    }
-    else {
-      this.setState({isSuggestionContainerVisible})
-    }
   }
 
   onSearchingEntry = ({data: {searchText}}) => {
@@ -204,8 +176,9 @@ export class FoodSelect extends Component {
     })
   }
 
-  onTextEntry = ({data: {foodList}}) => {
-    console.log('text entry', foodList)
+  onTextEntry = e => {
+    const foodList = e.data && e.data.foodList
+
     if(foodList){
       this.setState({
         foodList,

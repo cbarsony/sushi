@@ -10,7 +10,7 @@
     "react-dom": "^16.4.1",
     "react-router-dom": "^4.3.1",
     "react-scripts": "1.1.4",
-    "scion-core": "^1.5.5"
+    "scion-core": "git+https://github.com/cbarsony/SCION-CORE.git#no-modern-es-features"
   },
   "scripts": {
     "start": "react-scripts start",
