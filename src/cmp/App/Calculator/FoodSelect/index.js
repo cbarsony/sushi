@@ -1,4 +1,5 @@
 import React, {Component} from 'react'
+import PropTypes from 'prop-types'
 import {Statechart} from 'scion-core'
 import makeBem from 'bem-cx'
 
@@ -16,6 +17,9 @@ const states = {
   TEXT: 'TEXT',
   WAITING: 'WAITING',
   SEARCHING: 'SEARCHING',
+  SELECTED: 'SELECTED',
+  UNSELECTED: 'UNSELECTED',
+  CHOSEN: 'CHOSEN',
 }
 
 const events = {
@@ -25,16 +29,26 @@ const events = {
   CLEAR: 'CLEAR',
   TYPE: 'TYPE',
   FIND: 'FIND',
+  SELECT: 'SELECT',
+  CHOOSE: 'CHOOSE',
+}
+
+export const keys = {
+  UP: 'ArrowUp',
+  DOWN: 'ArrowDown',
+  ENTER: 'Enter',
+}
+
+const initialState = {
+  searchText: '',
+  isSearching: false,
+  foodList: [],
+  isSuggestionContainerVisible: false,
+  selectedFoodIndex: -1,
 }
 
 export class FoodSelect extends Component {
-  state = {
-    searchText: '',
-    isSearching: false,
-    foodList: [],
-    isSuggestionContainerVisible: false,
-    selectedFoodIndex: -1,
-  }
+  state = initialState
 
   componentDidMount() {
     const model = {
@@ -89,6 +103,31 @@ export class FoodSelect extends Component {
                     },
                   ],
                   onEntry: this.onTextEntry,
+                  states: [
+                    {
+                      id: states.UNSELECTED,
+                      transitions: [
+                        {
+                          event: events.SELECT,
+                          target: states.SELECTED,
+                        },
+                      ],
+                    },
+                    {
+                      id: states.SELECTED,
+                      transitions: [
+                        {
+                          event: events.SELECT,
+                          target: states.SELECTED,
+                        },
+                        {
+                          event: events.CHOOSE,
+                          target: states.CHOSEN,
+                        },
+                      ],
+                      onEntry: this.onSelectedEntry,
+                    },
+                  ],
                 },
               ],
             },
@@ -113,6 +152,16 @@ export class FoodSelect extends Component {
             },
           ],
         },
+        {
+          id: states.CHOSEN,
+          onEntry: this.onChosenEntry,
+          transitions: [
+            {
+              event: events.FOCUS,
+              target: states.WAITING,
+            },
+          ],
+        },
       ],
     }
 
@@ -131,10 +180,10 @@ export class FoodSelect extends Component {
           type="text"
           placeholder="Start typing a food name..."
           ref={input => this.foodSelectInput = input}
-          onChange={({target: {value}}) => value ? this.sc.gen(events.TYPE, {searchText: value}) : this.sc.gen(events.CLEAR)}
+          onChange={this.onInputChange}
+          onKeyDown={this.onInputKeyDown}
           onFocus={() => this.sc.gen(events.FOCUS)}
           onBlur={() => this.sc.gen(events.BLUR)}
-          onKeyDown={this.onKeyDown}
         />
         {state.isSearching && <span>searching...</span>}
         {state.isSuggestionContainerVisible && (
@@ -153,21 +202,35 @@ export class FoodSelect extends Component {
     )
   }
 
-  onFocusedExit = () => {
-    this.setState({isSuggestionContainerVisible: false})
+  /* Events */
+
+  onInputChange = ({target: {value}}) => value ? this.sc.gen(events.TYPE, {searchText: value}) : this.sc.gen(events.CLEAR)
+
+  onInputKeyDown = e => {
+    const key = e.key
+
+    if(key === keys.UP || key === keys.DOWN) {
+      this.sc.gen(events.SELECT, this._getSelectedIndex(key))
+      e.preventDefault()
+    }
+    else if(key === keys.ENTER && this.state.selectedFoodIndex > -1) {
+      this.sc.gen(events.CHOOSE, this.state.selectedFoodIndex)
+    }
   }
 
-  onEmptyEntry = () => {
-    this.setState({
-      searchText: '',
-      isSuggestionContainerVisible: false,
-    })
-  }
+  onSearchFoodsSuccess = foodList => this.sc.gen(events.FIND, {foodList})
+
+  /* Actions */
+
+  onFocusedExit = () => this.setState({isSuggestionContainerVisible: false})
+
+  onEmptyEntry = () => this.setState({
+    searchText: '',
+    isSuggestionContainerVisible: false,
+  })
 
   onSearchingEntry = ({data: {searchText}}) => {
-    api.searchFoods(searchText).then(foodList => {
-      this.sc.gen(events.FIND, {foodList})
-    })
+    api.searchFoods(searchText).then(this.onSearchFoodsSuccess)
 
     this.setState({
       searchText,
@@ -192,34 +255,36 @@ export class FoodSelect extends Component {
 
   onSearchingExit = () => this.setState({isSearching: false})
 
-  onKeyDown = e => {
-    if(this.state.foodList.length === 0) {
-      return
+  onSelectedEntry = e => this.setState({selectedFoodIndex: e.data})
+
+  onChosenEntry = e => {
+    this.props.selectFood(this.state.foodList[e.data])
+    this.setState(initialState)
+  }
+
+  /* Methods */
+
+  _getSelectedIndex = direction => {
+    if(direction === keys.DOWN) {
+      if(this.state.selectedFoodIndex === this.state.foodList.length - 1) {
+        return 0
+      }
+      else {
+        return this.state.selectedFoodIndex + 1
+      }
     }
-
-    if(e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      let selectedFoodIndex
-
-      if(e.key === 'ArrowDown') {
-        if(this.state.foodList.length <= this.state.selectedFoodIndex + 1) {
-          selectedFoodIndex = 0
-        }
-        else {
-          selectedFoodIndex = this.state.selectedFoodIndex + 1
-        }
+    else if(direction === keys.UP) {
+      if(this.state.selectedFoodIndex <= 0) {
+        return this.state.foodList.length - 1
       }
-      else if(e.key === 'ArrowUp') {
-        if(this.state.selectedFoodIndex === 0) {
-          selectedFoodIndex = this.state.foodList.length - 1
-        }
-        else {
-          selectedFoodIndex = this.state.selectedFoodIndex - 1
-        }
+      else {
+        return this.state.selectedFoodIndex - 1
       }
-
-      this.setState({selectedFoodIndex})
-
-      e.preventDefault()
+    }
+    else {
+      console.warn(`getSelectedIndex direction param should be 'UP' or 'DOWN'`)
     }
   }
 }
+
+FoodSelect.propTypes = {selectFood: PropTypes.func.isRequired}

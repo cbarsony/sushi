@@ -1,0 +1,51 @@
+@startuml
+
+class App
+
+App -- Calculator
+
+class Calculator {
+    --
+    ingredientList:Ingredient[]
+}
+
+Calculator -- FoodSelect
+Calculator -- IngredientList
+Calculator -- Pie
+
+class FoodSelect {
+    selectFood(food:Food)
+    --
+    searchText:String
+    isSearching:Bool
+    foodList:Food[]
+    isSuggestionContainerVisible:Bool
+    selectedFoodIndex:Number
+}
+
+class IngredientList {
+    ingredientList:Ingredient[]
+    saveIngredient(ingredient:Ingredient)
+    removeIngredient(index:Number)
+    --
+    isEditing:Bool
+}
+
+IngredientList -- IngredientItem
+
+class IngredientItem {
+    index:Number
+    ingredient:Ingredient
+    isEditing:Bool
+    saveIngredient(ingredient:Ingredient)
+    removeIngredient(index:Number)
+    --
+    amount:Number
+    unitName:String
+}
+
+class Pie {
+    ingredientList:Ingredient[]
+}
+
+@enduml

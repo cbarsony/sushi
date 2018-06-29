@@ -1,0 +1,38 @@
+@startuml
+
+scale 800 width
+
+state Blurred
+state Chosen
+state Focused {
+    state Searching
+    state Waiting {
+        state H
+        state Empty
+        state Text {
+            state Selected
+            state Unselected
+
+            [*] --> Unselected
+            Unselected --> Selected : select(id:Number)
+            Selected --> Selected : select(id:Number)
+        }
+
+        [*] --> Empty
+        Text --> Empty : clear()
+        Text --> Text : find(foodList:Food[])
+    }
+
+    Searching --> Empty : clear()
+    Searching --> Text : find(foodList:Food[])
+    Searching --> Searching : type(searchText:String)
+    Waiting --> Searching : type(searchText:String)
+}
+
+[*] -u-> Blurred
+Focused --> Blurred : blur()
+Blurred -u-> H : focus()
+Selected --> Chosen : choose(index:Number)
+Chosen --> Waiting : focus()
+
+@enduml
