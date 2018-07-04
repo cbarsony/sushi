@@ -2,6 +2,7 @@ import React, {Component} from 'react'
 import PropTypes from 'prop-types'
 import {Statechart} from 'scion-core'
 import makeBem from 'bem-cx'
+import _ from 'lodash'
 
 import {api} from 'api'
 
@@ -160,6 +161,10 @@ export class FoodSelect extends Component {
               event: events.FOCUS,
               target: states.WAITING,
             },
+            {
+              event: events.BLUR,
+              target: states.BLURRED,
+            },
           ],
         },
       ],
@@ -207,14 +212,18 @@ export class FoodSelect extends Component {
   onInputChange = ({target: {value}}) => value ? this.sc.gen(events.TYPE, {searchText: value}) : this.sc.gen(events.CLEAR)
 
   onInputKeyDown = e => {
+    if(_.isEmpty(this.state.foodList)) {
+      return
+    }
+
     const key = e.key
 
     if(key === keys.UP || key === keys.DOWN) {
-      this.sc.gen(events.SELECT, this._getSelectedIndex(key))
+      this.sc.gen(events.SELECT, {index: this._getSelectedIndex(key)})
       e.preventDefault()
     }
     else if(key === keys.ENTER && this.state.selectedFoodIndex > -1) {
-      this.sc.gen(events.CHOOSE, this.state.selectedFoodIndex)
+      this.sc.gen(events.CHOOSE, {index: this.state.selectedFoodIndex})
     }
   }
 
@@ -229,7 +238,9 @@ export class FoodSelect extends Component {
     isSuggestionContainerVisible: false,
   })
 
-  onSearchingEntry = ({data: {searchText}}) => {
+  onSearchingEntry = e => {
+    const searchText = e.data.searchText
+
     api.searchFoods(searchText).then(this.onSearchFoodsSuccess)
 
     this.setState({
@@ -239,26 +250,17 @@ export class FoodSelect extends Component {
     })
   }
 
-  onTextEntry = e => {
-    const foodList = e.data && e.data.foodList
-
-    if(foodList){
-      this.setState({
-        foodList,
-        isSuggestionContainerVisible: true,
-      })
-    }
-    else {
-      this.setState({isSuggestionContainerVisible: true})
-    }
-  }
+  onTextEntry = e => this.setState({
+    foodList: e.data.foodList,
+    isSuggestionContainerVisible: true,
+  })
 
   onSearchingExit = () => this.setState({isSearching: false})
 
-  onSelectedEntry = e => this.setState({selectedFoodIndex: e.data})
+  onSelectedEntry = e => this.setState({selectedFoodIndex: e.data.index})
 
   onChosenEntry = e => {
-    this.props.selectFood(this.state.foodList[e.data])
+    this.props.selectFood(this.state.foodList[e.data.index])
     this.setState(initialState)
   }
 

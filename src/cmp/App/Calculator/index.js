@@ -7,7 +7,10 @@ import {FoodSelect} from './FoodSelect'
 import {IngredientList} from './IngredientList'
 
 export class Calculator extends Component {
-  state = {ingredientList: []}
+  state = {
+    isEditing: false,
+    ingredientList: [],
+  }
 
   render() {
     const state = this.state
@@ -16,6 +19,7 @@ export class Calculator extends Component {
       <div className="Calculator">
         <FoodSelect selectFood={this.onSelectFood}/>
         <IngredientList
+          isEditing={state.isEditing}
           ingredientList={state.ingredientList}
           saveIngredient={this.onSaveIngredient}
           removeIngredient={this.onRemoveIngredient}
@@ -24,15 +28,23 @@ export class Calculator extends Component {
     )
   }
 
-  onSelectFood = food =>     this.setState(state => update(state, {
+  onSelectFood = food => this.setState(state => update(state, {
+    isEditing: {
+      $set: true,
+    },
     ingredientList: {
       $push: [new Ingredient(food, 0, food.units[0])],
     },
   }))
 
   onSaveIngredient = ingredient => this.setState(state => update(state, {
+    isEditing: {
+      $set: false,
+    },
     ingredientList: {
-      $push: [ingredient],
+      [this.state.ingredientList.length - 1]: {
+        $set: ingredient,
+      },
     },
   }))
 

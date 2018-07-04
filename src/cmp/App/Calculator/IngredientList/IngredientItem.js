@@ -10,6 +10,10 @@ export class IngredientItem extends Component {
     unitName: this.props.ingredient.food.units[0].name,
   }
 
+  componentDidMount() {
+    this.numberInput && this.numberInput.focus()
+  }
+
   render() {
     const props = this.props
     const state = this.state
@@ -20,6 +24,7 @@ export class IngredientItem extends Component {
         {props.isEditing ? (
           <input
             type="number"
+            ref={input => this.numberInput = input}
             value={state.amount}
             onChange={e => this.setState({amount: Number(e.target.value)})}
           />
@@ -59,7 +64,7 @@ export class IngredientItem extends Component {
       },
     })
 
-    this.props.saveIngredient(this.props.index, newIngredient)
+    this.props.saveIngredient(newIngredient)
   }
 
   onRemoveIngredient = () => this.props.removeIngredient(this.props.index)

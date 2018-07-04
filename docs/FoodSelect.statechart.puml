@@ -34,5 +34,6 @@ Focused --> Blurred : blur()
 Blurred -u-> H : focus()
 Selected --> Chosen : choose(index:Number)
 Chosen --> Waiting : focus()
+Chosen --> Blurred : blur()
 
 @enduml

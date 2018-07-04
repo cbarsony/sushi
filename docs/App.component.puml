@@ -6,6 +6,7 @@ App -- Calculator
 
 class Calculator {
     --
+    isEditing:Bool
     ingredientList:Ingredient[]
 }
 
@@ -24,11 +25,11 @@ class FoodSelect {
 }
 
 class IngredientList {
+    isEditing:Bool
     ingredientList:Ingredient[]
     saveIngredient(ingredient:Ingredient)
     removeIngredient(index:Number)
     --
-    isEditing:Bool
 }
 
 IngredientList -- IngredientItem
