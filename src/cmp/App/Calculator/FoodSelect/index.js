@@ -185,6 +185,7 @@ export class FoodSelect extends Component {
           type="text"
           placeholder="Start typing a food name..."
           ref={input => this.foodSelectInput = input}
+          value={state.searchText}
           onChange={this.onInputChange}
           onKeyDown={this.onInputKeyDown}
           onFocus={() => this.sc.gen(events.FOCUS)}

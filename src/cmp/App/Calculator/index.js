@@ -5,6 +5,7 @@ import {Ingredient} from 'api/classes'
 
 import {FoodSelect} from './FoodSelect'
 import {IngredientList} from './IngredientList'
+import {Pie} from './Pie'
 
 export class Calculator extends Component {
   state = {
@@ -14,6 +15,13 @@ export class Calculator extends Component {
 
   render() {
     const state = this.state
+    let isPieVisible = false
+
+    state.ingredientList.forEach(ingredient => {
+      if(ingredient.amount > 0) {
+        isPieVisible = true
+      }
+    })
 
     return (
       <div className="Calculator">
@@ -24,6 +32,7 @@ export class Calculator extends Component {
           saveIngredient={this.onSaveIngredient}
           removeIngredient={this.onRemoveIngredient}
         />
+        {isPieVisible && <Pie ingredientList={state.ingredientList}/>}
       </div>
     )
   }
@@ -48,5 +57,9 @@ export class Calculator extends Component {
     },
   }))
 
-  onRemoveIngredient = index => console.log(index)
+  onRemoveIngredient = index => this.setState(state => update(state, {
+    ingredientList: {
+      $splice: [[index, 1]],
+    },
+  }))
 }

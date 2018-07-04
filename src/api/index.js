@@ -7,7 +7,7 @@ const piece = new Unit('pieces', 100)
 
 const foods = [
   new Food(1, 'apple', 'apple description...', new Macros(30, 60, 10), [grams, piece]),
-  new Food(2, 'banana', 'banana description...', new Macros(30, 60, 10), [grams, piece]),
+  new Food(2, 'banana', 'banana description...', new Macros(20, 50, 30), [grams, piece]),
   new Food(3, 'cheese', 'cheese description...', new Macros(10, 20, 70), [grams]),
   new Food(4, 'app', 'apple 4 description...', new Macros(30, 60, 10), [grams, piece]),
   new Food(5, 'appl', 'apple 5 description...', new Macros(30, 60, 10), [grams, piece]),
