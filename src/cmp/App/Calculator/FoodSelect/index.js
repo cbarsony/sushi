@@ -6,7 +6,7 @@ import _ from 'lodash'
 
 import {api} from 'api'
 
-import './FoodSelect.css'
+import {FoodItem} from './FoodItem'
 
 const cn = makeBem('FoodSelect')
 
@@ -197,10 +197,14 @@ export class FoodSelect extends Component {
             <div>No search results for "{state.searchText}"</div>
           ) : (
             state.foodList.map((food, index) => (
-              <div
+              <FoodItem
                 key={index}
-                className={cn.mod({selected: index === state.selectedFoodIndex})}
-              >{food.name}</div>
+                index={index}
+                isSelected={index === state.selectedFoodIndex}
+                food={food}
+                onSelect={this.onFoodItemSelect}
+                onChoose={this.onFoodItemChoose}
+              />
             ))
           )
         )}
@@ -230,6 +234,10 @@ export class FoodSelect extends Component {
 
   onSearchFoodsSuccess = foodList => this.sc.gen(events.FIND, {foodList})
 
+  onFoodItemSelect = index => this.sc.gen(events.SELECT, {index})
+
+  onFoodItemChoose = index => this.sc.gen(events.CHOOSE, {index})
+
   /* Actions */
 
   onFocusedExit = () => this.setState({isSuggestionContainerVisible: false})
@@ -258,7 +266,10 @@ export class FoodSelect extends Component {
 
   onSearchingExit = () => this.setState({isSearching: false})
 
-  onSelectedEntry = e => this.setState({selectedFoodIndex: e.data.index})
+  onSelectedEntry = e => this.setState({
+    searchText: this.state.foodList[e.data.index].name,
+    selectedFoodIndex: e.data.index,
+  })
 
   onChosenEntry = e => {
     this.props.selectFood(this.state.foodList[e.data.index])

@@ -14,8 +14,8 @@ state Focused {
             state Unselected
 
             [*] --> Unselected
-            Unselected --> Selected : select(id:Number)
-            Selected --> Selected : select(id:Number)
+            Unselected --> Selected : select(index:Number)
+            Selected --> Selected : select(index:Number)
         }
 
         [*] --> Empty

@@ -24,6 +24,17 @@ class FoodSelect {
     selectedFoodIndex:Number
 }
 
+class FoodItem {
+    index:Number
+    onSelect(index:Number)
+    onChoose(index:Number)
+    isSelected:Bool
+    food:Food
+    --
+}
+
+FoodSelect -- FoodItem
+
 class IngredientList {
     isEditing:Bool
     ingredientList:Ingredient[]
